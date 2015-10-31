@@ -8,10 +8,10 @@
 #include <float.h>
 #include <qmath.h>
 
-#define GA_POWER        1000
+#define GA_POWER        500
 #define GA_P_CROSS      0.6
 #define GA_P_MUTATE     0.001
-#define GA_GENERATION_COUNT      20000
+#define GA_GENERATION_COUNT      1000
 
 #define FILE_STRING     "c:/coord.txt"
 enum SelectionType {
@@ -58,7 +58,7 @@ protected:
     void run();
 
 signals:
-    void updatePoints(QList<double> *points);
+    void updateRoute(QList<int> *route);
 
 public slots:
 

@@ -288,12 +288,19 @@ void GeneticAlgorithm::run()
 //        }
     }
 
+    QList<int> *route = new QList<int>;
     qDebug() << "Result:" << m_genotype.first().fitness << endl;
+    int currentTown = 0;
+    route->append(currentTown);
     for(int i = 0; i < m_genotype.first().length; i++)
     {
-        qDebug() << m_genotype.first().alleles[i] << " ";
+        int nextTown = m_genotype.first().alleles[currentTown];
+        route->append(nextTown);
+        qDebug() << m_genotype.first().alleles[currentTown]+1;
+        currentTown = nextTown;
     }
 
+    emit updateRoute(route);
 }
 
 QVector<gene> GeneticAlgorithm::genotype() const
