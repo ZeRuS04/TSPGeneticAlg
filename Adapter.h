@@ -16,13 +16,13 @@ public:
 
     Q_PROPERTY(QVariantList towns READ towns NOTIFY townsChanged)
 
-//    Q_PROPERTY(QList<int> optimalRoute READ optimalRoute NOTIFY optimalRouteChanged)
+    Q_PROPERTY(QVariantList optimalRoute READ optimalRoute NOTIFY optimalRouteChanged)
     Q_PROPERTY(QVariantList resultRoute READ resultRoute NOTIFY resultRouteChanged)
 
 
     QVariantList towns() const;
 
-//    QList<int> optimalRoute() const;
+    QVariantList optimalRoute() const;
 
     QVariantList resultRoute() const
     {
@@ -45,7 +45,7 @@ public slots:
 private:
     GeneticAlgorithm m_gAlg;
     QVariantList m_towns;
-    QList<int> m_optimalRoute;
+    QVariantList m_optimalRoute;
     QVariantList m_resultRoute;
 };
 

@@ -41,8 +41,8 @@ Window {
                 ctx.strokeStyle = "skyblue";
                 ctx.lineWidth = 2;
 //                ctx.moveTo(towns[resultRoute[0]-1].x*10, towns[resultRoute[0]-1].y*10);
-                for (var i = 1; i < resultRoute.length-1; i++) {
-                    console.log(i, ")", resultRoute[i], towns[resultRoute[i]-1].x, towns[resultRoute[i]-1].y);
+                for (var i = 0; i < resultRoute.length; i++) {
+                    console.log(i, ")", resultRoute[i], towns[resultRoute[i]].x, towns[resultRoute[i]].y);
 //                    ctx.moveTo(towns[resultRoute[i-1]-1].x*10, towns[resultRoute[i-1]-1].y*10);
                     ctx.lineTo(towns[resultRoute[i]].x*10 + 5, towns[resultRoute[i]].y*10)+5;
                 }
@@ -61,11 +61,11 @@ Window {
                 console.log(towns.length)
                 var ctx = canvas2.getContext("2d");
                 ctx.beginPath();
-                ctx.strokeStyle = "lightgreen";
-                ctx.lineWidth = 2;
+                ctx.strokeStyle = "rgba(100,190,105,0.5)";
+                ctx.lineWidth = 5;
 //                ctx.moveTo(towns[resultRoute[0]-1].x*10, towns[resultRoute[0]-1].y*10);
-                for (var i = 1; i < resultRoute.length-1; i++) {
-//                    console.log(i, ")", route[i], towns[route[i]-1].x, towns[route[i]-1].y);
+                for (var i = 0; i < route.length; i++) {
+                    console.log(i, ")", route[i], towns[route[i]].x, towns[route[i]].y);
 //                    ctx.moveTo(towns[resultRoute[i-1]-1].x*10, towns[resultRoute[i-1]-1].y*10);
                     ctx.lineTo(towns[route[i]].x*10 + 5, towns[route[i]].y*10)+5;
                 }

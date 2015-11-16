@@ -35,10 +35,10 @@ QVariantList Adapter::towns() const
     return m_towns;
 }
 
-//QVariantList Adapter::optimalRoute() const
-//{
-//    return m_optimalRoute;
-//}
+QVariantList Adapter::optimalRoute() const
+{
+    return m_optimalRoute;
+}
 
 bool Adapter::readCoordinates()
 {
@@ -49,7 +49,7 @@ bool Adapter::readCoordinates()
     while (!file.atEnd()) {
         QString line(file.readLine());
 
-        m_optimalRoute << line.toInt();
+        m_optimalRoute << QVariant(line.toInt()-1);
     }
     emit optimalRouteChanged();
     if(m_optimalRoute.isEmpty())
