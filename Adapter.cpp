@@ -1,10 +1,13 @@
 #include "Adapter.h"
+#include <QDebug>
 #include "QFile"
 
 Adapter::Adapter(QObject *parent) : QObject(parent)
 {
-    setTowns(m_gAlg.coordinates());
     readCoordinates();
+    m_gAlg.setCoordinates(m_coordinates);
+    setTowns(m_gAlg.coordinates());
+    readOptimalRout();
     connect(&m_gAlg, &GeneticAlgorithm::updateRoute, this, &Adapter::updateRoute);
     m_gAlg.start();
 }
@@ -40,15 +43,13 @@ QVariantList Adapter::optimalRoute() const
     return m_optimalRoute;
 }
 
-bool Adapter::readCoordinates()
+bool Adapter::readOptimalRout()
 {
     QFile file("c:/optimal.txt");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
         return false;
-
     while (!file.atEnd()) {
         QString line(file.readLine());
-
         m_optimalRoute << QVariant(line.toInt()-1);
     }
     emit optimalRouteChanged();
@@ -56,5 +57,46 @@ bool Adapter::readCoordinates()
         return false;
     else
         return true;
+}
+
+bool Adapter::readCoordinates()
+{
+    QFile file(FILE_STRING);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        return false;
+
+    qreal result = 0;
+    bool first = true;
+
+    QPointF oldPoint;
+    while (!file.atEnd()) {
+        QString line(file.readLine());
+        QStringList list = line.split(" ");
+
+        bool ok;
+        double x = list.at(1).toDouble(&ok);
+        if(!ok)
+            continue;
+
+        double y = list.at(2).toDouble(&ok);
+
+        if(!ok)
+            continue;
+        QPointF point(x,y);
+        m_coordinates << point;
+
+        if (first) {
+            first = false;
+            oldPoint = point;
+            continue;
+        }
+
+        QLineF lineF(oldPoint,point);
+        result += lineF.length();
+        oldPoint = point;
+    }
+    m_optimalPath = result;
+    qDebug() << "Optimal route result: " << result;
+    return true;
 }
 

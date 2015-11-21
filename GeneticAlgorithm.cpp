@@ -12,40 +12,9 @@ double fRand(double fMin, double fMax)
 
 GeneticAlgorithm::GeneticAlgorithm()
     : m_coordCount(0)
-    , isOk(false)
     , m_crossingType(HUERISTIC_CROSSOVER)
     , m_selectionType(ROULETTE_WHEEL)
 {
-    isOk = readCoordinates();
-}
-
-bool GeneticAlgorithm::readCoordinates()
-{
-    QFile file(FILE_STRING);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        return false;
-
-    while (!file.atEnd()) {
-        QString line(file.readLine());
-        QStringList list = line.split(" ");
-
-        bool ok;
-        double x = list.at(1).toDouble(&ok);
-        if(!ok)
-            continue;
-
-        double y = list.at(2).toDouble(&ok);
-
-        if(!ok)
-            continue;
-        QPointF point(x,y);
-        m_coordinates << point;
-        m_coordCount++;
-    }
-    if(m_coordinates.isEmpty())
-        return false;
-    else
-        return true;
 }
 
 void GeneticAlgorithm::fitnesFunction(gene* gene)
@@ -238,8 +207,9 @@ void GeneticAlgorithm::reductionOperator()
 {
     m_genotype << m_newGens;
     qSort(m_genotype);
-    if(m_genotype.length() > GA_POWER){
-        m_genotype.remove(GA_POWER, m_genotype.length() - GA_POWER);
+    while(m_genotype.length() > GA_POWER) {
+        delete m_genotype.last().alleles;
+        m_genotype.removeLast();
     }
 }
 
@@ -254,17 +224,18 @@ void GeneticAlgorithm::mutationOperator()
             m_newGens[i].alleles[n1] = m_newGens[i].alleles[n2];
             m_newGens[i].alleles[n2] = tmp;
             fitnesFunction(&m_newGens[i]);
-            qDebug() << "Mutation!";
         }
     }
 }
 
 void GeneticAlgorithm::run()
 {
-    if(!isOk) {
-        qWarning("Error. Coordinates was't initialized.");
-        return;
-    }
+
+    qDebug() << "POWER:" << GA_POWER;
+    qDebug() << "GENERATION_COUNT:" << GA_GENERATION_COUNT;
+    qDebug() << "POWER:" << GA_POWER;
+    qDebug() << "P_CROSS:" << GA_P_CROSS;
+    qDebug() << "P_MUTATE:" << GA_P_MUTATE;
     initGenerator();
 
     for (int i = 0; i < GA_GENERATION_COUNT; i++) {
@@ -296,7 +267,7 @@ void GeneticAlgorithm::run()
     {
         int nextTown = m_genotype.first().alleles[currentTown];
         route->append(nextTown);
-        qDebug() << m_genotype.first().alleles[currentTown]+1;
+//        qDebug() << m_genotype.first().alleles[currentTown]+1;
         currentTown = nextTown;
     }
 
@@ -321,4 +292,5 @@ QVector<QPointF> GeneticAlgorithm::coordinates() const
 void GeneticAlgorithm::setCoordinates(const QVector<QPointF> &coordinates)
 {
     m_coordinates = coordinates;
+    m_coordCount = coordinates.length();
 }

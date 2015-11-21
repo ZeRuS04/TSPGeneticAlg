@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QVariantList>
+#include <QLineF>
 #include <QVariant>
 #include "GeneticAlgorithm.h"
 
@@ -38,14 +39,18 @@ signals:
     void resultRouteChanged(QVariantList arg);
 
 public slots:
+    bool readOptimalRout();
     bool readCoordinates();
     void setTowns(QVector<QPointF> coord);
     void updateRoute(QList<int> *route);
 
 private:
+    QVector<QPointF> m_coordinates;
+
     GeneticAlgorithm m_gAlg;
     QVariantList m_towns;
     QVariantList m_optimalRoute;
+    qreal m_optimalPath;
     QVariantList m_resultRoute;
 };
 

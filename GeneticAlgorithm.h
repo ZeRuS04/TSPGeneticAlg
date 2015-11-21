@@ -8,10 +8,10 @@
 #include <float.h>
 #include <qmath.h>
 
-#define GA_POWER        3000
-#define GA_P_CROSS      0.6
+#define GA_POWER        100
+#define GA_P_CROSS      0.5
 #define GA_P_MUTATE     0.001
-#define GA_GENERATION_COUNT      20000
+#define GA_GENERATION_COUNT      30000
 
 #define FILE_STRING     "c:/coord.txt"
 enum SelectionType {
@@ -37,7 +37,6 @@ class  GeneticAlgorithm : public QThread
 {
     Q_OBJECT
 
-    bool readCoordinates();
     void fitnesFunction(gene* gene);
     gene crossOver(gene* parent1, gene* parent2);
 public:
