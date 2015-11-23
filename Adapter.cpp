@@ -9,12 +9,11 @@ Adapter::Adapter(QObject *parent) : QObject(parent)
     setTowns(m_gAlg.coordinates());
     readOptimalRout();
     connect(&m_gAlg, &GeneticAlgorithm::updateRoute, this, &Adapter::updateRoute);
-    m_gAlg.start();
+    m_gAlg.run();
 }
 
 Adapter::~Adapter()
 {
-    m_gAlg.exit(1);
 }
 
 void Adapter::setTowns(QVector<QPointF> coord)

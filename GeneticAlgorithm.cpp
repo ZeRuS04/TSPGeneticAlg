@@ -37,8 +37,10 @@ void GeneticAlgorithm::fitnesFunction(gene* gene)
     }
 }
 
-gene GeneticAlgorithm::crossOver(gene* parent1, gene* parent2)
+void GeneticAlgorithm::crossOver(parents parentsArray)
 {
+    gene *parent1 = &parentsArray.parents[0];
+    gene *parent2 = &parentsArray.parents[1];
     gene g;
     g.alleles = new unsigned short[m_coordCount];
     g.length = m_coordCount;
@@ -107,7 +109,7 @@ gene GeneticAlgorithm::crossOver(gene* parent1, gene* parent2)
             }
         }
         fitnesFunction(&g);
-        return g;
+        m_newGens << g;
         break;
     }
 }
@@ -138,89 +140,79 @@ void GeneticAlgorithm::initGenerator()
 
 void GeneticAlgorithm::selection()
 {
-    int parentsCount = 0;
-    gene parentsArray[2];
+    m_famaly.clear();
+    parents parentsArray;
+    parentsArray.count = 0;
     m_newGens.clear();
 
     switch (m_selectionType) {
     case ROULETTE_WHEEL:{
-        qSort(m_genotype);
-        double *wheel = new double[GA_POWER];
-        wheel[0] = 1/m_genotype.at(0).fitness;    //Значение ФитнессФункции для 1-ого генома
-        for (int i = 1; i < GA_POWER; i++){
-            wheel[i] = wheel[i-1] + 1/m_genotype.at(i).fitness;   //Значение ФитнессФункции для i-ого генома
-        }
-        double all = wheel[GA_POWER-1];
-
-        for (int i = 0; i < GA_POWER; i++){
-            double chance = fRand(0,1);
-            if(chance > GA_P_CROSS)
-                continue;
-
-            double index = fRand(0,1) * all;
-            int l = 0;
-            int r = GA_POWER-1;
-            int c = 0;
-            while (l < r){
-                if(r - l == 1)
-                    break;
-                c = (l+r) >> 1;
-                if (wheel[c] < index)
-                    l = c;
-                else
-                    r = c;
+            qSort(m_genotype);
+            double *wheel = new double[GA_POWER];
+            wheel[0] = 1/m_genotype.at(0).fitness;    //Значение ФитнессФункции для 1-ого генома
+            for (int i = 1; i < GA_POWER; i++){
+                wheel[i] = wheel[i-1] + 1/m_genotype.at(i).fitness;   //Значение ФитнессФункции для i-ого генома
             }
+            double all = wheel[GA_POWER-1];
 
-            parentsArray[parentsCount] = m_genotype.at(l);
-            parentsCount++;
-            if(parentsCount == 2) {
-                m_newGens << crossOver(&parentsArray[0],&parentsArray[1]);
-                parentsCount = 0;
+            for (int i = 0; i < GA_POWER; i++){
+                double chance = fRand(0,1);
+                if(chance > GA_P_CROSS)
+                    continue;
+
+                double index = fRand(0,1) * all;
+                int l = 0;
+                int r = GA_POWER-1;
+                int c = 0;
+                while (l < r){
+                    if(r - l == 1)
+                        break;
+                    c = (l+r) >> 1;
+                    if (wheel[c] < index)
+                        l = c;
+                    else
+                        r = c;
+                }
+
+                parentsArray.parents[parentsArray.count] = m_genotype.at(l);
+                parentsArray.count++;
+                if(parentsArray.count == 2) {
+                    m_famaly << parentsArray; //crossOver(&parentsArray[0],&parentsArray[1]);
+                    parentsArray.count = 0;
+                }
             }
         }
-    }break;
+        break;
     case TOURNEY: {
-        QVector<gene> genotype = m_genotype;
-        while (genotype.length() >= 2) {
-            int index1 = rand()%(genotype.length() - 1);
-            gene g1 = genotype.at(index1);
-            genotype.remove(index1);
-            int index2;
-            if(genotype.length() == 1)
-                index2 = 0;
-            else
-                index2 = rand()%(genotype.length() - 1);
-            gene g2 = genotype.at(index2);
-            genotype.remove(index2);
+            QVector<gene> genotype = m_genotype;
+            while (genotype.length() >= 2) {
+                int index1 = rand()%(genotype.length() - 1);
+                gene g1 = genotype.at(index1);
+                genotype.remove(index1);
+                int index2;
+                if(genotype.length() == 1)
+                    index2 = 0;
+                else
+                    index2 = rand()%(genotype.length() - 1);
+                gene g2 = genotype.at(index2);
+                genotype.remove(index2);
 
-            double fr1 = g1.fitness; //Значение ФитнессФункции для index1 Генома
-            double fr2 = g2.fitness; //Значение ФитнессФункции для index2 Генома
+                double fr1 = g1.fitness; //Значение ФитнессФункции для index1 Генома
+                double fr2 = g2.fitness; //Значение ФитнессФункции для index2 Генома
 
-            parentsArray[parentsCount] = fr1 < fr2 ? g1
-                                                   : g2;
-            parentsCount++;
+                 parentsArray.parents[parentsArray.count] = fr1 < fr2 ? g1
+                                                                      : g2;
+                 parentsArray.count++;
 
-            if(parentsCount == 2) {
-                m_newGens << crossOver(&parentsArray[0],&parentsArray[1]);
-                parentsCount = 0;
+                 if(parentsArray.count == 2) {
+                     m_famaly << parentsArray; //crossOver(&parentsArray[0],&parentsArray[1]);
+                     parentsArray.count = 0;
+                 }
             }
         }
-//        for (int i = 0; i < GA_POWER; i++){
-//            double chance = fRand(0,1);
-//            if(chance > GA_P_CROSS)
-//                continue;
-//            int index1 = rand()%GA_POWER - 1;
-//            int index2 = rand()%GA_POWER - 1;
-
-//            double fr1 = m_genotype.at(index1).fitness; //Значение ФитнессФункции для index1 Генома
-//            double fr2 = m_genotype.at(index2).fitness; //Значение ФитнессФункции для index2 Генома
-
-//            parentsArray[parentsCount] = fr1 > fr2 ? m_genotype.at(index1)
-//                                                   : m_genotype.at(index2);
-//            parentsCount++;
-//        }
-    } break;
+        break;
     }
+    QtConcurrent::map(m_famaly,  [this] (parents data) { crossOver(data); });
 }
 
 void GeneticAlgorithm::reductionOperator()
@@ -253,30 +245,14 @@ void GeneticAlgorithm::run()
 
     qDebug() << "POWER:" << GA_POWER;
     qDebug() << "GENERATION_COUNT:" << GA_GENERATION_COUNT;
-    qDebug() << "POWER:" << GA_POWER;
     qDebug() << "P_CROSS:" << GA_P_CROSS;
     qDebug() << "P_MUTATE:" << GA_P_MUTATE;
     initGenerator();
 
     for (int i = 0; i < GA_GENERATION_COUNT; i++) {
-
-//        QList<double> *points = new QList<double>();
-//        for( int j = 0; j < GA_POWER; j++){
-//            points->append(m_genotype.at(j).x);
-//        }
-//        emit updatePoints(points);
         selection();
         mutationOperator();
         reductionOperator();
-
-
-//        QVector<gene> tmp = m_genotype;
-//        tmp.removeAll(tmp.first());
-//        if (tmp.isEmpty()) {
-//            qDebug() << "EARLY END";
-//            qDebug() << "Total iterations: " << i;
-//            break;
-//        }
     }
 
     QList<int> *route = new QList<int>;

@@ -6,12 +6,13 @@
 #include <QList>
 #include <QPointF>
 #include <float.h>
+#include <QtConcurrent>
 #include <qmath.h>
 
-#define GA_POWER        100
+#define GA_POWER        500
 #define GA_P_CROSS      0.5
 #define GA_P_MUTATE     0.001
-#define GA_GENERATION_COUNT      30000
+#define GA_GENERATION_COUNT      1000
 
 #define FILE_STRING     "c:/coord.txt"
 enum SelectionType {
@@ -33,12 +34,17 @@ struct gene {
 //    bool operator==(gene const & gn) const  {return ((this->alleles & GA_MASK) == (gn.alleles & GA_MASK));}
 };
 
-class  GeneticAlgorithm : public QThread
+struct parents {
+    gene parents[2];
+    char count;
+};
+
+class  GeneticAlgorithm : public QObject
 {
     Q_OBJECT
 
     void fitnesFunction(gene* gene);
-    gene crossOver(gene* parent1, gene* parent2);
+    void crossOver(parents parentsArray);
 public:
     explicit GeneticAlgorithm();
 
@@ -51,9 +57,6 @@ public:
 
     QVector<gene> genotype() const;
     void setGenotype(const QVector<gene> &genotype);
-
-protected:
-    // QThread interface
     void run();
 
 signals:
@@ -64,6 +67,7 @@ public slots:
 private:
     QVector<gene> m_genotype;
     QVector<gene> m_newGens;
+    QVector<parents> m_famaly;
 
     QVector<QPointF> m_coordinates;
     ushort m_coordCount;
