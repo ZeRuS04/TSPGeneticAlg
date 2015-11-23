@@ -13,7 +13,7 @@ double fRand(double fMin, double fMax)
 GeneticAlgorithm::GeneticAlgorithm()
     : m_coordCount(0)
     , m_crossingType(HUERISTIC_CROSSOVER)
-    , m_selectionType(ROULETTE_WHEEL)
+    , m_selectionType(TOURNEY)
 {
 }
 
@@ -180,18 +180,24 @@ void GeneticAlgorithm::selection()
         }
     }break;
     case TOURNEY: {
-        for (int i = 0; i < GA_POWER; i++){
-            double chance = fRand(0,1);
-            if(chance > GA_P_CROSS)
-                continue;
-            int index1 = rand()%GA_POWER - 1;
-            int index2 = rand()%GA_POWER - 1;;
+        QVector<gene> genotype = m_genotype;
+        while (genotype.length() >= 2) {
+            int index1 = rand()%(genotype.length() - 1);
+            gene g1 = genotype.at(index1);
+            genotype.remove(index1);
+            int index2;
+            if(genotype.length() == 1)
+                index2 = 0;
+            else
+                index2 = rand()%(genotype.length() - 1);
+            gene g2 = genotype.at(index2);
+            genotype.remove(index2);
 
-            double fr1 = m_genotype.at(index1).fitness; //Значение ФитнессФункции для index1 Генома
-            double fr2 = m_genotype.at(index2).fitness; //Значение ФитнессФункции для index2 Генома
+            double fr1 = g1.fitness; //Значение ФитнессФункции для index1 Генома
+            double fr2 = g2.fitness; //Значение ФитнессФункции для index2 Генома
 
-            parentsArray[parentsCount] = fr1 > fr2 ? m_genotype.at(index1)
-                                                   : m_genotype.at(index2);
+            parentsArray[parentsCount] = fr1 < fr2 ? g1
+                                                   : g2;
             parentsCount++;
 
             if(parentsCount == 2) {
@@ -199,7 +205,21 @@ void GeneticAlgorithm::selection()
                 parentsCount = 0;
             }
         }
-    }break;
+//        for (int i = 0; i < GA_POWER; i++){
+//            double chance = fRand(0,1);
+//            if(chance > GA_P_CROSS)
+//                continue;
+//            int index1 = rand()%GA_POWER - 1;
+//            int index2 = rand()%GA_POWER - 1;
+
+//            double fr1 = m_genotype.at(index1).fitness; //Значение ФитнессФункции для index1 Генома
+//            double fr2 = m_genotype.at(index2).fitness; //Значение ФитнессФункции для index2 Генома
+
+//            parentsArray[parentsCount] = fr1 > fr2 ? m_genotype.at(index1)
+//                                                   : m_genotype.at(index2);
+//            parentsCount++;
+//        }
+    } break;
     }
 }
 

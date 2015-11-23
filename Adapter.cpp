@@ -48,11 +48,30 @@ bool Adapter::readOptimalRout()
     QFile file("c:/optimal.txt");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
         return false;
+
+    QPointF oldPoint;
+    qreal result = 0;
+    bool first = true;
+
     while (!file.atEnd()) {
         QString line(file.readLine());
-        m_optimalRoute << QVariant(line.toInt()-1);
+        int n = line.toInt()-1;
+        m_optimalRoute << QVariant(n);
+
+        QPointF point = m_coordinates.at(n);
+
+        if (first) {
+            first = false;
+            oldPoint = point;
+            continue;
+        }
+        QLineF lineF(oldPoint,point);
+        result += lineF.length();
+        oldPoint = point;
     }
     emit optimalRouteChanged();
+    m_optimalPath = result;
+    qDebug() << "Optimal route result: " << result;
     if(m_optimalRoute.isEmpty())
         return false;
     else
@@ -65,10 +84,6 @@ bool Adapter::readCoordinates()
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
         return false;
 
-    qreal result = 0;
-    bool first = true;
-
-    QPointF oldPoint;
     while (!file.atEnd()) {
         QString line(file.readLine());
         QStringList list = line.split(" ");
@@ -84,19 +99,7 @@ bool Adapter::readCoordinates()
             continue;
         QPointF point(x,y);
         m_coordinates << point;
-
-        if (first) {
-            first = false;
-            oldPoint = point;
-            continue;
-        }
-
-        QLineF lineF(oldPoint,point);
-        result += lineF.length();
-        oldPoint = point;
     }
-    m_optimalPath = result;
-    qDebug() << "Optimal route result: " << result;
     return true;
 }
 
