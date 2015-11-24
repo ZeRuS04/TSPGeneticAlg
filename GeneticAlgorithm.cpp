@@ -140,6 +140,7 @@ void GeneticAlgorithm::initGenerator()
 
 void GeneticAlgorithm::selection()
 {
+    qDebug() << "--------------------------------selection---------------------------";
     m_famaly.clear();
     parents parentsArray;
     parentsArray.count = 0;
@@ -212,7 +213,10 @@ void GeneticAlgorithm::selection()
         }
         break;
     }
-    QtConcurrent::map(m_famaly,  [this] (parents data) { crossOver(data); });
+
+    QtConcurrent::blockingMap(m_famaly,  [this] (parents data) {
+        this->crossOver(data);
+    });
 }
 
 void GeneticAlgorithm::reductionOperator()

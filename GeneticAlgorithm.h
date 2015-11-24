@@ -9,10 +9,10 @@
 #include <QtConcurrent>
 #include <qmath.h>
 
-#define GA_POWER        500
+#define GA_POWER        50
 #define GA_P_CROSS      0.5
 #define GA_P_MUTATE     0.001
-#define GA_GENERATION_COUNT      1000
+#define GA_GENERATION_COUNT      100
 
 #define FILE_STRING     "c:/coord.txt"
 enum SelectionType {
