@@ -27,9 +27,11 @@ void Adapter::setTowns(QVector<QPointF> coord)
 
 void Adapter::updateRoute(QList<int> *route)
 {
+    m_resultRoute.clear();
     foreach(int i, *route){
         m_resultRoute << QVariant(i);
     }
+    delete route;
     emit resultRouteChanged(m_resultRoute);
 }
 

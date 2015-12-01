@@ -3,8 +3,8 @@ import QtQuick.Window 2.2
 
 Window {
     id: root
-    width: 640
-    height: 640
+    width: 800
+    height: 800
 
     visible: true
     Flickable{
@@ -36,6 +36,7 @@ Window {
 
             onPaint: {
                 var ctx = canvas.getContext("2d");
+                ctx.clearRect(0, 0, width, height);
                 ctx.beginPath();
                 ctx.strokeStyle = "red";
                 ctx.lineWidth = 2;
@@ -59,6 +60,7 @@ Window {
             onPaint: {
 //                console.log(towns.length)
                 var ctx = canvas2.getContext("2d");
+                ctx.clearRect(0, 0, width, height);
                 ctx.beginPath();
                 ctx.strokeStyle = "rgba(100,190,105,0.5)";
                 ctx.lineWidth = 5;

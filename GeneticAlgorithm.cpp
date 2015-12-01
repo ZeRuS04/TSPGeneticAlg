@@ -6,14 +6,14 @@
 
 double fRand(double fMin, double fMax)
 {
-    double f = (double)rand() / RAND_MAX;
+    double f = (double)qrand() / RAND_MAX;
     return fMin + f * (fMax - fMin);
 }
 
 GeneticAlgorithm::GeneticAlgorithm()
     : m_coordCount(0)
     , m_crossingType(HUERISTIC_CROSSOVER)
-    , m_selectionType(TOURNEY)
+    , m_selectionType(ROULETTE_WHEEL)
 {
 }
 
@@ -44,7 +44,7 @@ gene GeneticAlgorithm::crossOver(gene* parent1, gene* parent2)
     g.length = m_coordCount;
     switch(m_crossingType) {
     case HUERISTIC_CROSSOVER:
-        ushort currentTown = rand()%(m_coordCount-1);   //выбираем случайный начальный город
+        ushort currentTown = qrand()%(m_coordCount-1);   //выбираем случайный начальный город
         ushort nextTown_1, nextTown_2;
 
         QVector<ushort> visitedTowns;
@@ -63,7 +63,7 @@ gene GeneticAlgorithm::crossOver(gene* parent1, gene* parent2)
 
             // Если оба варианта ведут к преждевременному циклу
             if( visitedTowns.contains(nextTown_1) && visitedTowns.contains(nextTown_2) ){
-                ushort n = rand()%(m_coordCount-1);
+                ushort n = qrand()%(m_coordCount-1);
                 // сгенерируем е любой еще не посещенный город:
                 while(visitedTowns.contains(n)){
                     n++;
@@ -95,7 +95,7 @@ gene GeneticAlgorithm::crossOver(gene* parent1, gene* parent2)
                 // Сравниваем расстояния до городов и выбираем наименьшее
                 QLineF line_1(m_coordinates.at(currentTown), m_coordinates.at(parent1->alleles[currentTown]));
                 QLineF line_2(m_coordinates.at(currentTown), m_coordinates.at(parent2->alleles[currentTown]));
-                if(line_1.length() > line_2.length()) {
+                if(line_1.length() < line_2.length()) {
                    g.alleles[currentTown] = nextTown_1;
                    currentTown = nextTown_1;
                 } else {
@@ -123,7 +123,7 @@ void GeneticAlgorithm::initGenerator()
         for (int i = 0; i < m_coordCount; i++) {
             ushort n;
             do{
-                n = rand()%(m_coordCount);
+                n = qrand()%(m_coordCount);
             } while(usedNums.contains(n));
             usedNums << n;
             g.alleles[i] = n;
@@ -182,14 +182,14 @@ void GeneticAlgorithm::selection()
     case TOURNEY: {
         QVector<gene> genotype = m_genotype;
         while (genotype.length() >= 2) {
-            int index1 = rand()%(genotype.length() - 1);
+            int index1 = qrand()%(genotype.length() - 1);
             gene g1 = genotype.at(index1);
             genotype.remove(index1);
             int index2;
             if(genotype.length() == 1)
                 index2 = 0;
             else
-                index2 = rand()%(genotype.length() - 1);
+                index2 = qrand()%(genotype.length() - 1);
             gene g2 = genotype.at(index2);
             genotype.remove(index2);
 
@@ -205,20 +205,6 @@ void GeneticAlgorithm::selection()
                 parentsCount = 0;
             }
         }
-//        for (int i = 0; i < GA_POWER; i++){
-//            double chance = fRand(0,1);
-//            if(chance > GA_P_CROSS)
-//                continue;
-//            int index1 = rand()%GA_POWER - 1;
-//            int index2 = rand()%GA_POWER - 1;
-
-//            double fr1 = m_genotype.at(index1).fitness; //Значение ФитнессФункции для index1 Генома
-//            double fr2 = m_genotype.at(index2).fitness; //Значение ФитнессФункции для index2 Генома
-
-//            parentsArray[parentsCount] = fr1 > fr2 ? m_genotype.at(index1)
-//                                                   : m_genotype.at(index2);
-//            parentsCount++;
-//        }
     } break;
     }
 }
@@ -238,8 +224,8 @@ void GeneticAlgorithm::mutationOperator()
     for(int i = 0; i < m_newGens.length(); i++) {
         double chance = fRand(0,1);
         if(chance <= GA_P_MUTATE){
-            ushort n1 = rand()%(m_coordCount);
-            ushort n2 = rand()%(m_coordCount);
+            ushort n1 = qrand()%(m_coordCount - 1);
+            ushort n2 = qrand()%(m_coordCount - 1);
             ushort tmp = m_newGens[i].alleles[n1];
             m_newGens[i].alleles[n1] = m_newGens[i].alleles[n2];
             m_newGens[i].alleles[n2] = tmp;
@@ -253,30 +239,38 @@ void GeneticAlgorithm::run()
 
     qDebug() << "POWER:" << GA_POWER;
     qDebug() << "GENERATION_COUNT:" << GA_GENERATION_COUNT;
-    qDebug() << "POWER:" << GA_POWER;
     qDebug() << "P_CROSS:" << GA_P_CROSS;
     qDebug() << "P_MUTATE:" << GA_P_MUTATE;
     initGenerator();
 
     for (int i = 0; i < GA_GENERATION_COUNT; i++) {
-
-//        QList<double> *points = new QList<double>();
-//        for( int j = 0; j < GA_POWER; j++){
-//            points->append(m_genotype.at(j).x);
-//        }
-//        emit updatePoints(points);
         selection();
         mutationOperator();
         reductionOperator();
 
 
-//        QVector<gene> tmp = m_genotype;
-//        tmp.removeAll(tmp.first());
-//        if (tmp.isEmpty()) {
-//            qDebug() << "EARLY END";
-//            qDebug() << "Total iterations: " << i;
-//            break;
-//        }
+        QVector<gene> tmp = m_genotype;
+        tmp.removeAll(tmp.first());
+        if (tmp.isEmpty()) {
+            qDebug() << "EARLY END";
+            qDebug() << "Total iterations: " << i;
+            break;
+        }
+
+        {
+            QList<int> *route = new QList<int>;
+            int currentTown = 0;
+            route->append(currentTown);
+            for(int i = 0; i < m_genotype.first().length; i++)
+            {
+                int nextTown = m_genotype.first().alleles[currentTown];
+                route->append(nextTown);
+                currentTown = nextTown;
+            }
+
+            emit updateRoute(route);
+        }
+
     }
 
     QList<int> *route = new QList<int>;
@@ -287,7 +281,6 @@ void GeneticAlgorithm::run()
     {
         int nextTown = m_genotype.first().alleles[currentTown];
         route->append(nextTown);
-//        qDebug() << m_genotype.first().alleles[currentTown]+1;
         currentTown = nextTown;
     }
 
