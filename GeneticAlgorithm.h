@@ -20,7 +20,8 @@ enum SelectionType {
 };
 
 enum CrossingType {
-    HUERISTIC_CROSSOVER
+    HUERISTIC_CROSSOVER,
+    ALTERNATING_EDGES
 };
 
 struct gene {

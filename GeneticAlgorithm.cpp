@@ -12,6 +12,7 @@ double fRand(double fMin, double fMax)
 
 GeneticAlgorithm::GeneticAlgorithm()
     : m_coordCount(0)
+//    , m_crossingType(ALTERNATING_EDGES)
     , m_crossingType(HUERISTIC_CROSSOVER)
     , m_selectionType(ROULETTE_WHEEL)
 {
@@ -35,6 +36,7 @@ void GeneticAlgorithm::fitnesFunction(gene* gene)
         gene->fitness += line.length();
         currentTown = nextTown;
     }
+    return;
 }
 
 gene GeneticAlgorithm::crossOver(gene* parent1, gene* parent2)
@@ -43,7 +45,7 @@ gene GeneticAlgorithm::crossOver(gene* parent1, gene* parent2)
     g.alleles = new unsigned short[m_coordCount];
     g.length = m_coordCount;
     switch(m_crossingType) {
-    case HUERISTIC_CROSSOVER:
+    case HUERISTIC_CROSSOVER: {
         ushort currentTown = qrand()%(m_coordCount-1);   //выбираем случайный начальный город
         ushort nextTown_1, nextTown_2;
 
@@ -106,10 +108,47 @@ gene GeneticAlgorithm::crossOver(gene* parent1, gene* parent2)
                 continue;
             }
         }
-        fitnesFunction(&g);
-        return g;
         break;
     }
+    case ALTERNATING_EDGES: {
+
+        QVector<ushort> visitedTowns;
+//        visitedTowns << currentTown;                    // Заносим город в посещенные
+        bool nextFirst = true;
+        int fi = 0;
+        int si = 0;
+        for(int i = 0; i < m_coordCount; i++) {         // Для каждого гена
+            ushort currentTown = nextFirst ? parent1->alleles[fi] : parent2->alleles[si];
+
+            // Закончим цикл если это последняя итерация
+            if( i == m_coordCount-1) {
+                g.alleles[i] = visitedTowns.at(0);
+                continue;
+            }
+
+            if( i != currentTown && !visitedTowns.contains(currentTown)) {
+                   g.alleles[i] = currentTown;
+                   visitedTowns << currentTown;                    // Заносим город в посещенные
+                   nextFirst = !nextFirst;
+                   fi++;
+                   si++;
+            } else {
+                i--;
+                if( nextFirst)
+                    fi++;
+                else
+                    si++;
+            }
+            if( fi == m_coordCount)
+                fi = 0;
+            if( si == m_coordCount)
+                si = 0;
+        }
+        break;
+    }
+    }
+    fitnesFunction(&g);
+    return g;
 }
 
 void GeneticAlgorithm::initGenerator()
