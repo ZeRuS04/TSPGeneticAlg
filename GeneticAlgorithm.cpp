@@ -10,11 +10,39 @@ double fRand(double fMin, double fMax)
     return fMin + f * (fMax - fMin);
 }
 
+bool  checkPath(gene* g, int l) {
+    int k = 0;
+    ushort currentTown = k, nextTown;
+    QVector<ushort> visitedTowns;
+    QVector<ushort> visitedIndexes;
+    visitedTowns << currentTown;
+
+    for(int i = 0; i < l; i++) {
+        if(currentTown >= l) {
+            do {
+                currentTown = ++k;
+            }while(visitedIndexes.contains(currentTown));
+        }
+        nextTown = g->alleles[currentTown];
+        if(visitedTowns.contains(nextTown) || currentTown == nextTown) {
+            return false;
+        }
+        visitedIndexes << currentTown;
+        visitedTowns << nextTown;
+        currentTown = nextTown;
+    }
+
+    if((visitedTowns.length() == g->length) || !visitedTowns.contains(g->alleles[currentTown]))
+        return true;
+    else
+        return false;
+}
+
 GeneticAlgorithm::GeneticAlgorithm()
     : m_coordCount(0)
-//    , m_crossingType(ALTERNATING_EDGES)
-    , m_crossingType(HUERISTIC_CROSSOVER)
-    , m_selectionType(ROULETTE_WHEEL)
+    , m_crossingType(ALTERNATING_EDGES)
+//    , m_crossingType(HUERISTIC_CROSSOVER)
+    , m_selectionType(TOURNEY)
 {
 }
 
@@ -111,14 +139,15 @@ gene GeneticAlgorithm::crossOver(gene* parent1, gene* parent2)
         break;
     }
     case ALTERNATING_EDGES: {
-
         QVector<ushort> visitedTowns;
 //        visitedTowns << currentTown;                    // Заносим город в посещенные
         bool nextFirst = true;
         int fi = 0;
         int si = 0;
         for(int i = 0; i < m_coordCount; i++) {         // Для каждого гена
-            ushort currentTown = nextFirst ? parent1->alleles[fi] : parent2->alleles[si];
+//            ushort currentEdge = nextFirst ? parent1->alleles[fi] : parent2->alleles[si];
+
+            ushort currentEdge = nextFirst ? parent1->alleles[fi] : parent2->alleles[si];
 
             // Закончим цикл если это последняя итерация
             if( i == m_coordCount-1) {
@@ -126,9 +155,10 @@ gene GeneticAlgorithm::crossOver(gene* parent1, gene* parent2)
                 continue;
             }
 
-            if( i != currentTown && !visitedTowns.contains(currentTown)) {
-                   g.alleles[i] = currentTown;
-                   visitedTowns << currentTown;                    // Заносим город в посещенные
+            g.alleles[i] = currentEdge;
+
+            if( i != currentEdge && !visitedTowns.contains(currentEdge) && checkPath(&g, i+1)) {
+                   visitedTowns << currentEdge;                    // Заносим город в посещенные
                    nextFirst = !nextFirst;
                    fi++;
                    si++;
@@ -139,10 +169,14 @@ gene GeneticAlgorithm::crossOver(gene* parent1, gene* parent2)
                 else
                     si++;
             }
-            if( fi == m_coordCount)
+            if( fi == m_coordCount) {
                 fi = 0;
-            if( si == m_coordCount)
+                nextFirst = !nextFirst;
+            }
+            if( si == m_coordCount) {
                 si = 0;
+                nextFirst = !nextFirst;
+            }
         }
         break;
     }
