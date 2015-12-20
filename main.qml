@@ -28,7 +28,7 @@ Window {
         }
         Canvas {
             id: canvas;
-            property var resultRoute: Adapter.resultRoute
+            property var resultRoute: Adapter.optimalRoute
             property var towns: Adapter.towns
             onResultRouteChanged: requestPaint()
             onTownsChanged: requestPaint()

@@ -2,14 +2,17 @@
 #include <QDebug>
 #include "QFile"
 
-Adapter::Adapter(QObject *parent) : QObject(parent)
+Adapter::Adapter(QObject *parent)
+    : QObject(parent)
+    , m_result(DBL_MAX)
 {
+    GeneticAlgorithm gAlg(0,0,0,0);
     readCoordinates();
-//    m_gAlg.setCoordinates(m_coordinates);
-//    setTowns(m_gAlg.coordinates());
-//    readOptimalRout();
-//    connect(&m_gAlg, &GeneticAlgorithm::updateRoute, this, &Adapter::updateRoute);
-//    m_gAlg.start();
+    gAlg.setCoordinates(m_coordinates);
+    setTowns(gAlg.coordinates());
+    readOptimalRout();
+//    connect(&gAlg, &GeneticAlgorithm::updateRoute, this, &Adapter::updateRoute);
+//    gAlg.start();
 }
 
 Adapter::~Adapter()
@@ -25,8 +28,13 @@ void Adapter::setTowns(QVector<QPointF> coord)
     emit townsChanged(m_towns);
 }
 
-void Adapter::updateRoute(QList<int> *route)
+void Adapter::updateRoute(QList<int> *route, double result)
 {
+    if(result >= m_result) {
+        delete route;
+        return;
+    }
+    m_result = result;
     m_resultRoute.clear();
     foreach(int i, *route){
         m_resultRoute << QVariant(i);
@@ -45,6 +53,14 @@ void Adapter::setCoordinates(const QVector<QPointF> &coordinates)
     m_coordinates = coordinates;
 }
 
+Adapter::start(int power, double pCross, double pMutate, int genCount)
+{
+    GeneticAlgorithm *ga = new GeneticAlgorithm(power, pCross, pMutate, genCount);
+    ga->setCoordinates(m_coordinates);
+    connect(ga, &GeneticAlgorithm::updateRoute, this, &Adapter::updateRoute);
+    ga->start();
+}
+
 QVariantList Adapter::towns() const
 {
     return m_towns;
@@ -61,6 +77,7 @@ bool Adapter::readOptimalRout()
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
         return false;
 
+    QPointF firstPoint;
     QPointF oldPoint;
     qreal result = 0;
     bool first = true;
@@ -74,13 +91,18 @@ bool Adapter::readOptimalRout()
 
         if (first) {
             first = false;
-            oldPoint = point;
+            oldPoint = firstPoint = point;
             continue;
         }
         QLineF lineF(oldPoint,point);
         result += lineF.length();
         oldPoint = point;
     }
+
+    m_optimalRoute << m_optimalRoute.first();
+    QLineF lineF(oldPoint,firstPoint);
+    result += lineF.length();
+
     emit optimalRouteChanged();
     m_optimalPath = result;
     qDebug() << "Optimal route result: " << result;

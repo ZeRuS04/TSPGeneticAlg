@@ -11,83 +11,22 @@ double fRand(double fMin, double fMax)
     return fMin + f * (fMax - fMin);
 }
 
-//QVector<QVector<ushort> > getFragments(gene* g, int l) {
-//    int fIndex = 0;
-//    QVector<QVector<ushort>> retVal;
-//    retVal << QVector<ushort>();
-
-//    ushort currentTown = 0, nextTown;
-//    retVal[fIndex] << currentTown;
-
-//    for(int i = 0; i < l; i++) {
-//        nextTown = g->alleles[currentTown];
-
-
-
-////        if(currentTown >= l) {
-////            do {
-////                currentTown = ++k;
-////            }while(visitedIndexes.contains(currentTown));
-////            specialIndexes << currentTown;
-////        }
-
-////        nextTown = g->alleles[currentTown];
-////        if(retVal[fIndex].contains(nextTown) || currentTown == nextTown) {
-////            return false;
-////        }
-////        visitedTowns << nextTown;
-////        currentTown = nextTown;
-////        visitedIndexes << currentTown;
-//    }
-
-//}
-
-//bool  checkPath(gene* g, int l) {
-//    int k = 0;
-//    ushort currentTown = k, nextTown;
-//    QVector<ushort> visitedTowns;
-//    QVector<ushort> visitedIndexes;
-//    QVector<ushort> specialIndexes;
-//    visitedTowns << currentTown;
-
-//    for(int i = 0; i < l; i++) {
-//        if(currentTown >= l) {
-//            do {
-//                currentTown = ++k;
-//            }while(visitedIndexes.contains(currentTown));
-//            specialIndexes << currentTown;
-//        }
-//        nextTown = g->alleles[currentTown];
-//        if(visitedTowns.contains(nextTown) || currentTown == nextTown) {
-//            return false;
-//        }
-//        visitedTowns << nextTown;
-//        currentTown = nextTown;
-//        visitedIndexes << currentTown;
-//    }
-
-//    if((visitedTowns.length() != g->length) && visitedTowns.contains(g->alleles[currentTown]))
-//        return false;
-//    else
-//        return true;
-//}
-
 GeneticAlgorithm::GeneticAlgorithm(int power, double pCross, double pMutate, int genCount)
     : m_coordCount(0)
     , m_power(power)
     , m_pCross(pCross)
     , m_pMutate(pMutate)
     , m_genCount(genCount)
-//    , m_crossingType(ALTERNATING_EDGES)
     , m_crossingType(HUERISTIC_CROSSOVER)
     , m_selectionType(TOURNEY)
 {
+    setStackSize(2);
 }
 
 void GeneticAlgorithm::fitnesFunction(gene* gene)
 {
     gene->fitness = 0;
-    ushort currentTown = 0, nextTown;
+    ushort currentTown = gene->alleles[0], nextTown;
     QVector<ushort> visitedTowns;
     visitedTowns << currentTown;
 
@@ -102,6 +41,9 @@ void GeneticAlgorithm::fitnesFunction(gene* gene)
         gene->fitness += line.length();
         currentTown = nextTown;
     }
+
+    QLineF line(m_coordinates.at(currentTown),m_coordinates.at(visitedTowns.first()));
+    gene->fitness += line.length();
     return;
 }
 
@@ -182,42 +124,6 @@ gene GeneticAlgorithm::crossOver(gene* parent1, gene* parent2)
             }
         }
         break;
-    }
-    case ALTERNATING_EDGES: {
-        //        QVector<QVector<ushort> > fragments;
-        //        bool nextFirst = true;
-        //        for(int i = 0; i < m_coordCount; i++) {         // Для каждого гена
-        ////            // Закончим цикл если это последняя итерация
-        ////            if( i == m_coordCount-1) {
-        ////                g.alleles[i] = visitedTowns.at(0);
-        ////                continue;
-        ////            }
-        //            ushort currentEdge = nextFirst ? parent1->alleles[i] : parent2->alleles[i];
-
-        //            g.alleles[i] = currentEdge;
-
-        //            if( i != currentEdge && !visitedTowns.contains(currentEdge) && checkPath(&g, i+1)) {
-        //                   visitedTowns << currentEdge;                    // Заносим город в посещенные
-        //                   nextFirst = !nextFirst;
-        //                   fi++;
-        //                   si++;
-        //            } else {
-        //                i--;
-        //                if( nextFirst)
-        //                    fi++;
-        //                else
-        //                    si++;
-        //            }
-        //            if( fi == m_coordCount) {
-        //                fi = 0;
-        //                nextFirst = !nextFirst;
-        //            }
-        //            if( si == m_coordCount) {
-        //                si = 0;
-        //                nextFirst = !nextFirst;
-        //            }
-        //        }
-        //        break;
     }
     }
     fitnesFunction(&g);
@@ -349,15 +255,11 @@ void GeneticAlgorithm::mutationOperator()
 void GeneticAlgorithm::run()
 {
 
-    qDebug() << "POWER:" << m_power;
-    qDebug() << "GENERATION_COUNT:" << m_genCount;
-    qDebug() << "P_CROSS:" << m_pCross;
-    qDebug() << "P_MUTATE:" << m_pMutate;
-
+    setPriority(QThread::LowestPriority);
     qsrand ( time(NULL) );
     initGenerator();
-
-    for (int i = 0; i < m_genCount; i++) {
+    int i;
+    for (i = 0; i < m_genCount; i++) {
 
         qsrand ( time(NULL) );
         selection();
@@ -368,29 +270,12 @@ void GeneticAlgorithm::run()
         QVector<gene> tmp = m_genotype;
         tmp.removeAll(tmp.first());
         if (tmp.isEmpty()) {
-            qDebug() << "EARLY END";
-            qDebug() << "Total iterations: " << i;
             break;
         }
 
-        {
-            QList<int> *route = new QList<int>;
-            int currentTown = 0;
-            route->append(currentTown);
-            for(int i = 0; i < m_genotype.first().length; i++)
-            {
-                int nextTown = m_genotype.first().alleles[currentTown];
-                route->append(nextTown);
-                currentTown = nextTown;
-            }
-
-            emit updateRoute(route);
-        }
-
     }
-
     QList<int> *route = new QList<int>;
-    qDebug() << "Result:" << m_genotype.first().fitness << endl;
+    qDebug() << m_genotype.first().fitness << "\t" << i;
     int currentTown = 0;
     route->append(currentTown);
     for(int i = 0; i < m_genotype.first().length; i++)
@@ -400,7 +285,7 @@ void GeneticAlgorithm::run()
         currentTown = nextTown;
     }
 
-    emit updateRoute(route);
+    emit updateRoute(route, m_genotype.first().fitness);
 }
 
 int GeneticAlgorithm::genCount() const

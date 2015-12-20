@@ -33,6 +33,7 @@ public:
     QVector<QPointF> coordinates() const;
     void setCoordinates(const QVector<QPointF> &coordinates);
 
+    start(int power, double pCross, double pMutate, int genCount);
 signals:
 
     void townsChanged(QVariantList arg);
@@ -45,16 +46,17 @@ public slots:
     bool readOptimalRout();
     bool readCoordinates();
     void setTowns(QVector<QPointF> coord);
-    void updateRoute(QList<int> *route);
+    void updateRoute(QList<int> *route, double result);
 
 private:
     QVector<QPointF> m_coordinates;
 
-//    GeneticAlgorithm m_gAlg;
+
     QVariantList m_towns;
     QVariantList m_optimalRoute;
     qreal m_optimalPath;
     QVariantList m_resultRoute;
+    double m_result;
 };
 
 #endif // ADAPTER_H

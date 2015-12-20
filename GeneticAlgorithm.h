@@ -46,7 +46,7 @@ struct gene {
     }
 };
 
-class  GeneticAlgorithm : public QObject
+class  GeneticAlgorithm : public QThread
 {
     Q_OBJECT
 
@@ -77,12 +77,12 @@ public:
     int genCount() const;
     void setGenCount(int genCount);
 
-//protected:
+protected:
     // QThread interface
     void run();
 
 signals:
-    void updateRoute(QList<int> *route);
+    void updateRoute(QList<int> *route, double result);
 
 public slots:
 
