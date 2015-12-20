@@ -5,16 +5,16 @@
 Adapter::Adapter(QObject *parent) : QObject(parent)
 {
     readCoordinates();
-    m_gAlg.setCoordinates(m_coordinates);
-    setTowns(m_gAlg.coordinates());
-    readOptimalRout();
-    connect(&m_gAlg, &GeneticAlgorithm::updateRoute, this, &Adapter::updateRoute);
-    m_gAlg.start();
+//    m_gAlg.setCoordinates(m_coordinates);
+//    setTowns(m_gAlg.coordinates());
+//    readOptimalRout();
+//    connect(&m_gAlg, &GeneticAlgorithm::updateRoute, this, &Adapter::updateRoute);
+//    m_gAlg.start();
 }
 
 Adapter::~Adapter()
 {
-    m_gAlg.exit(1);
+//    m_gAlg.exit(1);
 }
 
 void Adapter::setTowns(QVector<QPointF> coord)
@@ -33,6 +33,16 @@ void Adapter::updateRoute(QList<int> *route)
     }
     delete route;
     emit resultRouteChanged(m_resultRoute);
+}
+
+QVector<QPointF> Adapter::coordinates() const
+{
+    return m_coordinates;
+}
+
+void Adapter::setCoordinates(const QVector<QPointF> &coordinates)
+{
+    m_coordinates = coordinates;
 }
 
 QVariantList Adapter::towns() const

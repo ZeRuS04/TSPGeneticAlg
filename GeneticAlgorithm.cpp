@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QLineF>
 #include <QRegExp>
+#include <time.h>
 
 double fRand(double fMin, double fMax)
 {
@@ -10,38 +11,75 @@ double fRand(double fMin, double fMax)
     return fMin + f * (fMax - fMin);
 }
 
-bool  checkPath(gene* g, int l) {
-    int k = 0;
-    ushort currentTown = k, nextTown;
-    QVector<ushort> visitedTowns;
-    QVector<ushort> visitedIndexes;
-    visitedTowns << currentTown;
+//QVector<QVector<ushort> > getFragments(gene* g, int l) {
+//    int fIndex = 0;
+//    QVector<QVector<ushort>> retVal;
+//    retVal << QVector<ushort>();
 
-    for(int i = 0; i < l; i++) {
-        if(currentTown >= l) {
-            do {
-                currentTown = ++k;
-            }while(visitedIndexes.contains(currentTown));
-        }
-        nextTown = g->alleles[currentTown];
-        if(visitedTowns.contains(nextTown) || currentTown == nextTown) {
-            return false;
-        }
-        visitedIndexes << currentTown;
-        visitedTowns << nextTown;
-        currentTown = nextTown;
-    }
+//    ushort currentTown = 0, nextTown;
+//    retVal[fIndex] << currentTown;
 
-    if((visitedTowns.length() == g->length) || !visitedTowns.contains(g->alleles[currentTown]))
-        return true;
-    else
-        return false;
-}
+//    for(int i = 0; i < l; i++) {
+//        nextTown = g->alleles[currentTown];
 
-GeneticAlgorithm::GeneticAlgorithm()
+
+
+////        if(currentTown >= l) {
+////            do {
+////                currentTown = ++k;
+////            }while(visitedIndexes.contains(currentTown));
+////            specialIndexes << currentTown;
+////        }
+
+////        nextTown = g->alleles[currentTown];
+////        if(retVal[fIndex].contains(nextTown) || currentTown == nextTown) {
+////            return false;
+////        }
+////        visitedTowns << nextTown;
+////        currentTown = nextTown;
+////        visitedIndexes << currentTown;
+//    }
+
+//}
+
+//bool  checkPath(gene* g, int l) {
+//    int k = 0;
+//    ushort currentTown = k, nextTown;
+//    QVector<ushort> visitedTowns;
+//    QVector<ushort> visitedIndexes;
+//    QVector<ushort> specialIndexes;
+//    visitedTowns << currentTown;
+
+//    for(int i = 0; i < l; i++) {
+//        if(currentTown >= l) {
+//            do {
+//                currentTown = ++k;
+//            }while(visitedIndexes.contains(currentTown));
+//            specialIndexes << currentTown;
+//        }
+//        nextTown = g->alleles[currentTown];
+//        if(visitedTowns.contains(nextTown) || currentTown == nextTown) {
+//            return false;
+//        }
+//        visitedTowns << nextTown;
+//        currentTown = nextTown;
+//        visitedIndexes << currentTown;
+//    }
+
+//    if((visitedTowns.length() != g->length) && visitedTowns.contains(g->alleles[currentTown]))
+//        return false;
+//    else
+//        return true;
+//}
+
+GeneticAlgorithm::GeneticAlgorithm(int power, double pCross, double pMutate, int genCount)
     : m_coordCount(0)
-    , m_crossingType(ALTERNATING_EDGES)
-//    , m_crossingType(HUERISTIC_CROSSOVER)
+    , m_power(power)
+    , m_pCross(pCross)
+    , m_pMutate(pMutate)
+    , m_genCount(genCount)
+//    , m_crossingType(ALTERNATING_EDGES)
+    , m_crossingType(HUERISTIC_CROSSOVER)
     , m_selectionType(TOURNEY)
 {
 }
@@ -93,12 +131,17 @@ gene GeneticAlgorithm::crossOver(gene* parent1, gene* parent2)
 
             // Если оба варианта ведут к преждевременному циклу
             if( visitedTowns.contains(nextTown_1) && visitedTowns.contains(nextTown_2) ){
-                ushort n = qrand()%(m_coordCount-1);
+                ushort n;
                 // сгенерируем е любой еще не посещенный город:
-                while(visitedTowns.contains(n)){
-                    n++;
-                    if(n >= m_coordCount)
-                        n = 0;
+                if(visitedTowns.length() >= m_coordCount-1) {
+                    n = 0;
+                    while(visitedTowns.contains(n)){
+                        n++;
+                    }
+                } else {
+                    do {
+                        n = qrand()%(m_coordCount-1);
+                    } while(visitedTowns.contains(n));
                 }
                 g.alleles[currentTown] = n; // и посетим его следующим
                 currentTown = n;
@@ -123,9 +166,11 @@ gene GeneticAlgorithm::crossOver(gene* parent1, gene* parent2)
             // Если подходят оба города:
             if( !visitedTowns.contains(nextTown_1) && !visitedTowns.contains(nextTown_2) ){
                 // Сравниваем расстояния до городов и выбираем наименьшее
-                QLineF line_1(m_coordinates.at(currentTown), m_coordinates.at(parent1->alleles[currentTown]));
-                QLineF line_2(m_coordinates.at(currentTown), m_coordinates.at(parent2->alleles[currentTown]));
-                if(line_1.length() < line_2.length()) {
+                QLineF line_1(m_coordinates.at(currentTown), m_coordinates.at(nextTown_1));
+                QLineF line_2(m_coordinates.at(currentTown), m_coordinates.at(nextTown_2));
+                double l1 = line_1.length();
+                double l2 = line_2.length();
+                if(l1 < l2) {
                    g.alleles[currentTown] = nextTown_1;
                    currentTown = nextTown_1;
                 } else {
@@ -139,46 +184,40 @@ gene GeneticAlgorithm::crossOver(gene* parent1, gene* parent2)
         break;
     }
     case ALTERNATING_EDGES: {
-        QVector<ushort> visitedTowns;
-//        visitedTowns << currentTown;                    // Заносим город в посещенные
-        bool nextFirst = true;
-        int fi = 0;
-        int si = 0;
-        for(int i = 0; i < m_coordCount; i++) {         // Для каждого гена
-//            ushort currentEdge = nextFirst ? parent1->alleles[fi] : parent2->alleles[si];
+        //        QVector<QVector<ushort> > fragments;
+        //        bool nextFirst = true;
+        //        for(int i = 0; i < m_coordCount; i++) {         // Для каждого гена
+        ////            // Закончим цикл если это последняя итерация
+        ////            if( i == m_coordCount-1) {
+        ////                g.alleles[i] = visitedTowns.at(0);
+        ////                continue;
+        ////            }
+        //            ushort currentEdge = nextFirst ? parent1->alleles[i] : parent2->alleles[i];
 
-            ushort currentEdge = nextFirst ? parent1->alleles[fi] : parent2->alleles[si];
+        //            g.alleles[i] = currentEdge;
 
-            // Закончим цикл если это последняя итерация
-            if( i == m_coordCount-1) {
-                g.alleles[i] = visitedTowns.at(0);
-                continue;
-            }
-
-            g.alleles[i] = currentEdge;
-
-            if( i != currentEdge && !visitedTowns.contains(currentEdge) && checkPath(&g, i+1)) {
-                   visitedTowns << currentEdge;                    // Заносим город в посещенные
-                   nextFirst = !nextFirst;
-                   fi++;
-                   si++;
-            } else {
-                i--;
-                if( nextFirst)
-                    fi++;
-                else
-                    si++;
-            }
-            if( fi == m_coordCount) {
-                fi = 0;
-                nextFirst = !nextFirst;
-            }
-            if( si == m_coordCount) {
-                si = 0;
-                nextFirst = !nextFirst;
-            }
-        }
-        break;
+        //            if( i != currentEdge && !visitedTowns.contains(currentEdge) && checkPath(&g, i+1)) {
+        //                   visitedTowns << currentEdge;                    // Заносим город в посещенные
+        //                   nextFirst = !nextFirst;
+        //                   fi++;
+        //                   si++;
+        //            } else {
+        //                i--;
+        //                if( nextFirst)
+        //                    fi++;
+        //                else
+        //                    si++;
+        //            }
+        //            if( fi == m_coordCount) {
+        //                fi = 0;
+        //                nextFirst = !nextFirst;
+        //            }
+        //            if( si == m_coordCount) {
+        //                si = 0;
+        //                nextFirst = !nextFirst;
+        //            }
+        //        }
+        //        break;
     }
     }
     fitnesFunction(&g);
@@ -188,7 +227,7 @@ gene GeneticAlgorithm::crossOver(gene* parent1, gene* parent2)
 void GeneticAlgorithm::initGenerator()
 {
     m_genotype.clear();
-    for(int i = 0; i <  GA_POWER; i++) {
+    for(int i = 0; i <  m_power; i++) {
         gene g;
         g.alleles = new unsigned short[m_coordCount];
         g.length = m_coordCount;
@@ -218,21 +257,21 @@ void GeneticAlgorithm::selection()
     switch (m_selectionType) {
     case ROULETTE_WHEEL:{
         qSort(m_genotype);
-        double *wheel = new double[GA_POWER];
+        double *wheel = new double[m_power];
         wheel[0] = 1/m_genotype.at(0).fitness;    //Значение ФитнессФункции для 1-ого генома
-        for (int i = 1; i < GA_POWER; i++){
+        for (int i = 1; i < m_power; i++){
             wheel[i] = wheel[i-1] + 1/m_genotype.at(i).fitness;   //Значение ФитнессФункции для i-ого генома
         }
-        double all = wheel[GA_POWER-1];
+        double all = wheel[m_power-1];
 
-        for (int i = 0; i < GA_POWER; i++){
+        for (int i = 0; i < m_power; i++){
             double chance = fRand(0,1);
-            if(chance > GA_P_CROSS)
+            if(chance > m_pCross)
                 continue;
 
             double index = fRand(0,1) * all;
             int l = 0;
-            int r = GA_POWER-1;
+            int r = m_power-1;
             int c = 0;
             while (l < r){
                 if(r - l == 1)
@@ -286,7 +325,7 @@ void GeneticAlgorithm::reductionOperator()
 {
     m_genotype << m_newGens;
     qSort(m_genotype);
-    while(m_genotype.length() > GA_POWER) {
+    while(m_genotype.length() > m_power) {
         delete m_genotype.last().alleles;
         m_genotype.removeLast();
     }
@@ -296,7 +335,7 @@ void GeneticAlgorithm::mutationOperator()
 {
     for(int i = 0; i < m_newGens.length(); i++) {
         double chance = fRand(0,1);
-        if(chance <= GA_P_MUTATE){
+        if(chance <= m_pMutate){
             ushort n1 = qrand()%(m_coordCount - 1);
             ushort n2 = qrand()%(m_coordCount - 1);
             ushort tmp = m_newGens[i].alleles[n1];
@@ -310,13 +349,17 @@ void GeneticAlgorithm::mutationOperator()
 void GeneticAlgorithm::run()
 {
 
-    qDebug() << "POWER:" << GA_POWER;
-    qDebug() << "GENERATION_COUNT:" << GA_GENERATION_COUNT;
-    qDebug() << "P_CROSS:" << GA_P_CROSS;
-    qDebug() << "P_MUTATE:" << GA_P_MUTATE;
+    qDebug() << "POWER:" << m_power;
+    qDebug() << "GENERATION_COUNT:" << m_genCount;
+    qDebug() << "P_CROSS:" << m_pCross;
+    qDebug() << "P_MUTATE:" << m_pMutate;
+
+    qsrand ( time(NULL) );
     initGenerator();
 
-    for (int i = 0; i < GA_GENERATION_COUNT; i++) {
+    for (int i = 0; i < m_genCount; i++) {
+
+        qsrand ( time(NULL) );
         selection();
         mutationOperator();
         reductionOperator();
@@ -358,6 +401,46 @@ void GeneticAlgorithm::run()
     }
 
     emit updateRoute(route);
+}
+
+int GeneticAlgorithm::genCount() const
+{
+    return m_genCount;
+}
+
+void GeneticAlgorithm::setGenCount(int genCount)
+{
+    m_genCount = genCount;
+}
+
+double GeneticAlgorithm::pMutate() const
+{
+    return m_pMutate;
+}
+
+void GeneticAlgorithm::setPMutate(double pMutate)
+{
+    m_pMutate = pMutate;
+}
+
+double GeneticAlgorithm::pCross() const
+{
+    return m_pCross;
+}
+
+void GeneticAlgorithm::setPCross(double pCross)
+{
+    m_pCross = pCross;
+}
+
+int GeneticAlgorithm::power() const
+{
+    return m_power;
+}
+
+void GeneticAlgorithm::setPower(int power)
+{
+    m_power = power;
 }
 
 QVector<gene> GeneticAlgorithm::genotype() const

@@ -8,10 +8,10 @@
 #include <float.h>
 #include <qmath.h>
 
-#define GA_POWER        450
-#define GA_P_CROSS      0.5
-#define GA_P_MUTATE     0.001
-#define GA_GENERATION_COUNT      1000
+//#define GA_POWER        700
+//#define GA_P_CROSS      0.5
+//#define GA_P_MUTATE     0.001
+//#define GA_GENERATION_COUNT      10000
 
 #define FILE_STRING     "c:/coord.txt"
 enum SelectionType {
@@ -46,14 +46,14 @@ struct gene {
     }
 };
 
-class  GeneticAlgorithm : public QThread
+class  GeneticAlgorithm : public QObject
 {
     Q_OBJECT
 
     void fitnesFunction(gene* gene);
     gene crossOver(gene* parent1, gene* parent2);
 public:
-    explicit GeneticAlgorithm();
+    explicit GeneticAlgorithm(int power, double pCross, double pMutate, int genCount);
 
     void initGenerator();
     void selection();
@@ -65,7 +65,19 @@ public:
     QVector<gene> genotype() const;
     void setGenotype(const QVector<gene> &genotype);
 
-protected:
+    int power() const;
+    void setPower(int power);
+
+    double pCross() const;
+    void setPCross(double pCross);
+
+    double pMutate() const;
+    void setPMutate(double pMutate);
+
+    int genCount() const;
+    void setGenCount(int genCount);
+
+//protected:
     // QThread interface
     void run();
 
@@ -83,6 +95,11 @@ private:
 
     SelectionType m_selectionType;
     CrossingType m_crossingType;
+
+    int m_power;
+    double m_pCross;
+    double m_pMutate;
+    int m_genCount;
     bool isOk;
 };
 

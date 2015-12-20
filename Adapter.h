@@ -30,6 +30,9 @@ public:
         return m_resultRoute;
     }
 
+    QVector<QPointF> coordinates() const;
+    void setCoordinates(const QVector<QPointF> &coordinates);
+
 signals:
 
     void townsChanged(QVariantList arg);
@@ -47,7 +50,7 @@ public slots:
 private:
     QVector<QPointF> m_coordinates;
 
-    GeneticAlgorithm m_gAlg;
+//    GeneticAlgorithm m_gAlg;
     QVariantList m_towns;
     QVariantList m_optimalRoute;
     qreal m_optimalPath;

@@ -2,8 +2,6 @@
 #include <QQmlContext>
 #include <QQmlApplicationEngine>
 #include "Adapter.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <time.h>
 
 int main(int argc, char *argv[])
@@ -12,9 +10,14 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
     Adapter adapter;
 
-    QQmlApplicationEngine engine;
-    engine.rootContext()->setContextProperty("Adapter", &adapter);
-    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+    for(int i = 50; i <= 2000; i+=50) {
+        GeneticAlgorithm ga(i, 0.5, 0.001, 10000);
+        ga.setCoordinates(adapter.coordinates());
+        ga.run();
+    }
+//    QQmlApplicationEngine engine;
+//    engine.rootContext()->setContextProperty("Adapter", &adapter);
+//    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
     return app.exec();
 }
 
